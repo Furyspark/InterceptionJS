@@ -1,0 +1,14 @@
+{
+  "name": "node-interception",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "test": "node-gyp rebuild --target=1.1.1 --arch=x64 --dist-url=https://atom.io/download/atom-shell & node compile.js & electron ."
+  },
+  "devDependencies": {
+    "concatenate-files": "^0.1.1"
+  },
+  "dependencies": {
+    "nan": "^2.3.3"
+  }
+}

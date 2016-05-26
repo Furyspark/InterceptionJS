@@ -1,0 +1,10 @@
+{
+  "sources": [
+    "src/input.js",
+
+    "src/profile.js",
+
+    "src/main.js"
+  ],
+  "target": "test.js"
+}

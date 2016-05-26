@@ -1,0 +1,93 @@
+#include "interception.h"
+#include <node.h>
+#include <v8.h>
+#include <uv.h>
+#include <string>
+
+#if       _WIN32_WINNT < 0x0500
+  #undef  _WIN32_WINNT
+  #define _WIN32_WINNT   0x0500
+#endif
+// #include <thread>
+
+using namespace v8;
+
+namespace demo {
+  struct Work {
+    uv_work_t request;
+    Persistent<Function> callback;
+
+    InterceptionContext *context;
+    InterceptionDevice *device;
+    Isolate *isolate;
+    int keyCode;
+    bool keyDown;
+    bool keyE0;
+    bool hasData;
+    std::string hwid;
+
+    int count;
+  };
+
+  using v8::Function;
+  using v8::FunctionCallbackInfo;
+  using v8::FunctionTemplate;
+  using v8::Isolate;
+  using v8::Local;
+  using v8::Persistent;
+  using v8::Null;
+  using v8::Object;
+  using v8::Value;
+  using v8::Number;
+  using v8::Boolean;
+
+  void some_callback(uv_async_t *async_data) {
+    Isolate *isolate = Isolate::GetCurrent();
+
+    void* data = async_data->data;
+
+    // Local<Number> count = NanNew<Number>(data.count);
+    // count = Number::New(isolate, data->count);
+  }
+
+  void StartInterception(const FunctionCallbackInfo<Value> &args) {
+    Isolate *isolate = Isolate::GetCurrent();
+
+    // Persistent<Function> js_callback = args[0].As<Function>();
+
+    Local<Function> interceptionCallback = Local<Function>::Cast(args[0]);
+    Persistent<Function, CopyablePersistentTraits<Function>> persistCallback(isolate, interceptionCallback);
+
+    uv_async_t async_data;
+
+    uv_async_init(uv_default_loop(), &async_data, some_callback);
+
+    Work *w;
+    w = new Work();
+    w->count = 3;
+    w->callback.Reset(isolate, persistCallback);
+    async_data.data = (void*)w;
+    uv_async_send(&async_data);
+  }
+
+  void CreateInterception(const FunctionCallbackInfo<Value> &args) {
+    Isolate* isolate = args.GetIsolate();
+
+    Local<Object> mainObj = Object::New(isolate);
+
+    Local<Object> interceptionObj = Object::New(isolate);
+    mainObj->Set(String::NewFromUtf8(isolate, "main"), interceptionObj);
+
+    Local<FunctionTemplate> startTpl = FunctionTemplate::New(isolate, StartInterception);
+    Local<Function> startFunc = startTpl->GetFunction();
+    mainObj->Set(String::NewFromUtf8(isolate, "start"), startFunc);
+
+    args.GetReturnValue().Set(mainObj);
+  }
+
+  void Init(Local<Object> exports, Local<Object> module) {
+    NODE_SET_METHOD(module, "exports", CreateInterception);
+  }
+
+  NODE_MODULE(addon, Init)
+}
