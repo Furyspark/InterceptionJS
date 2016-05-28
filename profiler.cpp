@@ -49,97 +49,26 @@ namespace demo {
   InterceptionKeyStroke globalStroke;
   Work *work;
 
-  void HandleInterception2(uv_work_t *req) {
-    Work *w = static_cast<Work *>(req->data);
-    Isolate *isolate = Isolate::GetCurrent();
-
-    Handle<Value> arglol[1];
-    arglol[0] = String::NewFromUtf8(isolate, "meow");
-    // arglol[0] = Number::New(isolate, 0);
-    // Local<Function> func = Local<Function>::New(isolate, work->callback);
-    // func->Call(isolate->GetCurrentContext()->Global(), 1, arglol);
-  }
-
-  void HandleInterceptionComplete2(uv_work_t *req, int status) {
-    // Work *w = static_cast<Work *>(req->data);
-    // w->hasData = false;
-  }
-
-  void async_cb(uv_async_t* handle) {
-    // Work w;
-    // w = *((Work*) handle->data);
-    Isolate *isolate = Isolate::GetCurrent();
-    v8::HandleScope handleScope(isolate);
-
-    // Local<Function> func = Local<Function>::New(isolate, work->callback);
-    // func->Call(isolate->GetCurrentContext()->Global(), 0, NULL);
-
-    if(work->hasData) {
-      Handle<Value> arglol[4];
-      // arglol[0] = String::NewFromUtf8(isolate, "meow");
-      // arglol[0] = Number::New(isolate, 0);
-      arglol[0] = Number::New(isolate, work->keyCode);
-      arglol[1] = Boolean::New(isolate, work->keyDown);
-      arglol[2] = Boolean::New(isolate, work->keyE0);
-      arglol[3] = v8::String::NewFromUtf8(isolate, work->hwid.c_str());
-      Local<Function> func = Local<Function>::New(isolate, work->callback);
-      func->Call(isolate->GetCurrentContext()->Global(), 4, arglol);
-      work->hasData = false;
-    }
-  }
-
-  // void HandleInterception(Isolate *isolate, InterceptionContext *context, InterceptionDevice *device, InterceptionKeyStroke *stroke, Work *work) {
   void HandleInterception(uv_work_t *req) {
-  // void HandleInterception(void *arg) {
-    // uv_work_t *req = ((uv_work_t *) arg);
     Work *w = static_cast<Work *>(req->data);
-    // Isolate *isolate = work->isolate;
     InterceptionContext context = *work->context;
     InterceptionDevice device = *work->device;
-    InterceptionKeyStroke stroke;
 
     wchar_t hardware_id[500];
 
-    // Handle<Value> arglol[1];
-    // arglol[0] = String::NewFromUtf8(isolate, "meow");
-    // Local<Function> func = Local<Function>::New(isolate, work->callback);
-    // func->Call(isolate->GetCurrentContext()->Global(), 1, arglol);
+    while(interception_receive(globalContext, globalDevice = interception_wait(globalContext), (InterceptionStroke *)&globalStroke, 1) > 0) {
+      size_t length = interception_get_hardware_id(globalContext, globalDevice, hardware_id, sizeof(hardware_id));
+      std::wstring hwid2(hardware_id);
+      std::string hardwareID = std::string(hwid2.begin(), hwid2.end());
 
-    // if(!work->hasData) {
-      while(interception_receive(globalContext, globalDevice = interception_wait(globalContext), (InterceptionStroke *)&globalStroke, 1) > 0) {
-      // while(interception_receive(context, device = interception_wait(context), (InterceptionStroke)*stroke, 1) > 0) {
-      // uv_async_init(uv_default_loop(), w->async, async_cb);
-
-        size_t length = interception_get_hardware_id(globalContext, globalDevice, hardware_id, sizeof(hardware_id));
-        std::wstring hwid2(hardware_id);
-        std::string hardwareID = std::string(hwid2.begin(), hwid2.end());
-        // meow = true;
-      // Isolate *isolate = Isolate::GetCurrent();
-      // //   Local<Number> keyCode = Number::New(isolate, (*stroke).code);
-      // //   Local<Boolean> keyDown = Boolean::New(isolate, ((*stroke).state == INTERCEPTION_KEY_DOWN || (*stroke).state == INTERCEPTION_KEY_DOWN + INTERCEPTION_KEY_E0));
-      // //   Local<Boolean> keyE0 = Boolean::New(isolate, ((*stroke).state == INTERCEPTION_KEY_UP + INTERCEPTION_KEY_E0 || (*stroke).state == INTERCEPTION_KEY_DOWN + INTERCEPTION_KEY_E0));
-      // //
-      //
-        // if(!w->hasData) {
-          // Isolate *isolate = Isolate::GetCurrent();
-          w->keyCode = globalStroke.code;
-          w->keyDown = (globalStroke.state == INTERCEPTION_KEY_DOWN || globalStroke.state == INTERCEPTION_KEY_DOWN + INTERCEPTION_KEY_E0);
-          w->keyE0 = (globalStroke.state == INTERCEPTION_KEY_UP + INTERCEPTION_KEY_E0 || globalStroke.state == INTERCEPTION_KEY_DOWN + INTERCEPTION_KEY_E0);
-          w->hwid = hardwareID;
-          w->hasData = true;
-          w->stroke = &globalStroke;
-          // uv_async_send(w->async);
-          // uv_queue_work(uv_default_loop(), &work->request, HandleInterception2, HandleInterceptionComplete2);
-        // }
-      // //
-        // interception_send(context, device, (InterceptionStroke *)&stroke, 1);
-      //
-        break;
-      }
-    // }
-  }
-
-  void grunsk(uv_work_t *req, int status) {
+      w->keyCode = globalStroke.code;
+      w->keyDown = (globalStroke.state == INTERCEPTION_KEY_DOWN || globalStroke.state == INTERCEPTION_KEY_DOWN + INTERCEPTION_KEY_E0);
+      w->keyE0 = (globalStroke.state == INTERCEPTION_KEY_UP + INTERCEPTION_KEY_E0 || globalStroke.state == INTERCEPTION_KEY_DOWN + INTERCEPTION_KEY_E0);
+      w->hwid = hardwareID;
+      w->hasData = true;
+      w->stroke = &globalStroke;
+      break;
+    }
   }
 
   void HandleInterceptionComplete(uv_work_t *req, int status) {
@@ -149,8 +78,6 @@ namespace demo {
 
     if(w->hasData) {
       Handle<Value> arglol[4];
-      // arglol[0] = String::NewFromUtf8(isolate, "meow");
-      // arglol[0] = Number::New(isolate, 0);
       arglol[0] = Number::New(isolate, w->keyCode);
       arglol[1] = Boolean::New(isolate, w->keyDown);
       arglol[2] = Boolean::New(isolate, w->keyE0);
@@ -187,33 +114,15 @@ namespace demo {
 
     uv_async_t meow;
     work->async = &meow;
-    // meow.data = &work;
-    // uv_async_init(uv_default_loop(), &meow, async_cb);
-    // uv_async_send(&meow);
 
     work->active = true;
-    // while(true == true) {
-    // while(work->active) {
-    //   work->active = false;
     uv_queue_work(uv_default_loop(), &work->request, HandleInterception, HandleInterceptionComplete);
-    // }
-    // }
   }
 
   void DestroyInterception(const FunctionCallbackInfo<Value>& args) {
     Isolate* isolate = args.GetIsolate();
 
     interception_destroy_context(globalContext);
-  }
-
-  void ContinueInterception(const FunctionCallbackInfo<Value>& args) {
-    Isolate* isolate = args.GetIsolate();
-
-    Local<Function> interceptionCallback = Local<Function>::Cast(args[0]);
-    Persistent<Function, CopyablePersistentTraits<Function>> persistCallback(isolate, interceptionCallback);
-    // work->callback = Persistent(isolate, persistCallback);
-    work->callback.Reset(isolate, persistCallback);
-    uv_queue_work(uv_default_loop(), &work->request, HandleInterception, HandleInterceptionComplete);
   }
 
   bool GetKeyIsE0(std::string key) {
@@ -234,6 +143,17 @@ namespace demo {
     for(int a = 0;a < testNum;a++) {
       if(key == test[a]) return true;
     }
+    return false;
+  }
+
+  bool GetKeyIsMouse(std::string key) {
+    if(key == "mousebuttonleft") return true;
+    if(key == "mousebuttonmiddle") return true;
+    if(key == "mousebuttonright") return true;
+    if(key == "mousebutton4") return true;
+    if(key == "mousebutton5") return true;
+    if(key == "mousewheelup") return true;
+    if(key == "mousewheeldown") return true;
     return false;
   }
 
@@ -364,16 +284,45 @@ namespace demo {
     std::string keyName = std::string(*String::Utf8Value(args[0]->ToString()));
     bool keyDown = args[1]->BooleanValue();
 
-    short keyCode = GetKeyCode(keyName);
-    bool isE0 = GetKeyIsE0(keyName);
+    if(GetKeyIsMouse(keyName)) {
+      InterceptionMouseStroke mStroke;
 
-    globalStroke.state = INTERCEPTION_KEY_UP;
-    if(keyDown) globalStroke.state = INTERCEPTION_KEY_DOWN;
-    if(isE0) globalStroke.state += INTERCEPTION_KEY_E0;
-    globalStroke.code = keyCode;
-
-    if(globalStroke.code != SCANCODE_NONE) {
+      if(keyDown) {
+        if(keyName == "mousebuttonleft") mStroke.state = INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN;
+        else if(keyName == "mousebuttonmiddle") mStroke.state = INTERCEPTION_MOUSE_MIDDLE_BUTTON_DOWN;
+        else if(keyName == "mousebuttonright") mStroke.state = INTERCEPTION_MOUSE_RIGHT_BUTTON_DOWN;
+        else if(keyName == "mousebutton4") mStroke.state = INTERCEPTION_MOUSE_BUTTON_4_DOWN;
+        else if(keyName == "mousebutton5") mStroke.state = INTERCEPTION_MOUSE_BUTTON_5_DOWN;
+      }
+      else {
+        if(keyName == "mousebuttonleft") mStroke.state = INTERCEPTION_MOUSE_LEFT_BUTTON_UP;
+        else if(keyName == "mousebuttonmiddle") mStroke.state = INTERCEPTION_MOUSE_MIDDLE_BUTTON_UP;
+        else if(keyName == "mousebuttonright") mStroke.state = INTERCEPTION_MOUSE_RIGHT_BUTTON_UP;
+        else if(keyName == "mousebutton4") mStroke.state = INTERCEPTION_MOUSE_BUTTON_4_UP;
+        else if(keyName == "mousebutton5") mStroke.state = INTERCEPTION_MOUSE_BUTTON_5_UP;
+      }
+      if(keyName == "mousewheeldown") {
+        mStroke.state = INTERCEPTION_MOUSE_WHEEL;
+        mStroke.y = 1;
+      }
+      else if(keyName == "mousewheelup") {
+        mStroke.state = INTERCEPTION_MOUSE_WHEEL;
+        mStroke.y = -1;
+      }
       interception_send(globalContext, globalDevice, (InterceptionStroke *)&globalStroke, 1);
+    }
+    else {
+      short keyCode = GetKeyCode(keyName);
+      bool isE0 = GetKeyIsE0(keyName);
+
+      globalStroke.state = INTERCEPTION_KEY_UP;
+      if(keyDown) globalStroke.state = INTERCEPTION_KEY_DOWN;
+      if(isE0) globalStroke.state += INTERCEPTION_KEY_E0;
+      globalStroke.code = keyCode;
+
+      if(globalStroke.code != SCANCODE_NONE) {
+        interception_send(globalContext, globalDevice, (InterceptionStroke *)&globalStroke, 1);
+      }
     }
   }
 
@@ -381,7 +330,6 @@ namespace demo {
     Isolate* isolate = args.GetIsolate();
 
     interception_send(globalContext, globalDevice, (InterceptionStroke *)&globalStroke, 1);
-    // PlaySound((LPCSTR) "activate_profile.wav", NULL, SND_FILENAME | SND_ASYNC);
   }
 
   void CreateInterception(const FunctionCallbackInfo<Value>& args) {
@@ -408,44 +356,7 @@ namespace demo {
     Local<Function> destroyFunc = destroyTpl->GetFunction();
     mainObj->Set(String::NewFromUtf8(isolate, "destroy"), destroyFunc);
 
-    // Local<FunctionTemplate> continueTpl = FunctionTemplate::New(isolate, ContinueInterception);
-    // Local<Function> continueFunc = continueTpl->GetFunction();
-    // mainObj->Set(String::NewFromUtf8(isolate, "continue"), continueFunc);
-
     args.GetReturnValue().Set(mainObj);
-
-
-    // Local<Function> interceptionCallback = Local<Function>::Cast(args[0]);
-    // Persistent<Function, CopyablePersistentTraits<Function>> persistCallback(isolate, interceptionCallback);
-    // Persistent<Function> bla;
-    // bla.Reset(isolate, persistCallback);
-
-    // InterceptionContext context;
-    // InterceptionDevice device;
-    // InterceptionKeyStroke stroke;
-    //
-    // context = interception_create_context();
-    //
-    // interception_set_filter(context, interception_is_keyboard, INTERCEPTION_FILTER_KEY_DOWN | INTERCEPTION_FILTER_KEY_UP | INTERCEPTION_FILTER_KEY_E0);
-    //
-    // while(interception_receive(context, device = interception_wait(context), (InterceptionStroke *)&stroke, 1) > 0) {
-    //   // isolate = Isolate::GetCurrent();
-    //   Handle<Value> arglol[1];
-    //   // arglol[0] = String::NewFromUtf8(isolate, "meow");
-    //   arglol[0] = Number::New(isolate, 0);
-    //   Local<Function> func = Local<Function>::New(isolate, work->callback);
-    //   func->Call(isolate->GetCurrentContext()->Global(), 1, arglol);
-    //   // w->hasData = false;
-    // }
-
-
-    // Handle<Value> arglol[1];
-    // arglol[0] = String::NewFromUtf8(isolate, "meow");
-    // // Local<Object> woof = Object::New(isolate);
-    // Local<Function> func = Local<Function>::New(isolate, work->callback);
-    // func->Call(isolate->GetCurrentContext()->Global(), 1, arglol);
-
-    // std::thread interceptionThread(HandleInterception, isolate, &context, &device, &stroke, work);
   }
 
   void Init(Local<Object> exports, Local<Object> module) {
