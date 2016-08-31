@@ -13,6 +13,20 @@
 
 using namespace v8;
 
+enum MouseWheelFlag
+{
+  MOUSE_WHEEL_NONE = 0,
+  MOUSE_WHEEL_V = 1,
+  MOUSE_WHEEL_H = 2
+};
+
+enum MouseMoveFlag
+{
+  MOUSE_MOVE_NONE = 0,
+  MOUSE_MOVE_ABS = 1,
+  MOUSE_MOVE_REL = 2
+};
+
 namespace demo {
   struct Work {
     uv_work_t request;
@@ -20,12 +34,17 @@ namespace demo {
 
     InterceptionContext *context;
     InterceptionDevice *device;
-    InterceptionKeyStroke *stroke;
+    InterceptionStroke *stroke;
     Isolate *isolate;
     int keyCode;
     bool keyDown;
     bool keyE0;
     bool hasData;
+    int mouseWheel;
+    int mouseMove;
+    int deviceType;
+    int x;
+    int y;
     std::string hwid;
 
     bool active;
@@ -46,7 +65,9 @@ namespace demo {
 
   InterceptionDevice globalDevice;
   InterceptionContext globalContext;
-  InterceptionKeyStroke globalStroke;
+  InterceptionStroke globalStroke;
+  InterceptionDevice lastKeyboardDevice;
+  InterceptionDevice lastMouseDevice;
   Work *work;
 
   void HandleInterception(uv_work_t *req) {
@@ -56,14 +77,46 @@ namespace demo {
 
     wchar_t hardware_id[500];
 
-    while(interception_receive(globalContext, globalDevice = interception_wait(globalContext), (InterceptionStroke *)&globalStroke, 1) > 0) {
+    while(interception_receive(globalContext, globalDevice = interception_wait(globalContext), &globalStroke, 1) > 0) {
       size_t length = interception_get_hardware_id(globalContext, globalDevice, hardware_id, sizeof(hardware_id));
       std::wstring hwid2(hardware_id);
       std::string hardwareID = std::string(hwid2.begin(), hwid2.end());
 
-      w->keyCode = globalStroke.code;
-      w->keyDown = (globalStroke.state == INTERCEPTION_KEY_DOWN || globalStroke.state == INTERCEPTION_KEY_DOWN + INTERCEPTION_KEY_E0);
-      w->keyE0 = (globalStroke.state == INTERCEPTION_KEY_UP + INTERCEPTION_KEY_E0 || globalStroke.state == INTERCEPTION_KEY_DOWN + INTERCEPTION_KEY_E0);
+      if(interception_is_keyboard(globalDevice)) {
+        InterceptionKeyStroke kstroke = *(InterceptionKeyStroke *) &globalStroke;
+        lastKeyboardDevice = globalDevice;
+        w->deviceType = 0;
+        w->keyCode = kstroke.code;
+        w->keyDown = (kstroke.state == INTERCEPTION_KEY_DOWN || kstroke.state == INTERCEPTION_KEY_DOWN + INTERCEPTION_KEY_E0);
+        w->keyE0 = (kstroke.state == INTERCEPTION_KEY_UP + INTERCEPTION_KEY_E0 || kstroke.state == INTERCEPTION_KEY_DOWN + INTERCEPTION_KEY_E0);
+      }
+      else if(interception_is_mouse(globalDevice)) {
+        lastMouseDevice = globalDevice;
+        InterceptionMouseStroke mstroke = *(InterceptionMouseStroke *) &globalStroke;
+        w->deviceType = 1;
+        // Misc
+        w->x = mstroke.x;
+        w->y = mstroke.y;
+        // Buttons
+        w->keyCode = mstroke.state;
+        w->keyDown = (mstroke.state == INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN || mstroke.state == INTERCEPTION_MOUSE_MIDDLE_BUTTON_DOWN ||
+          mstroke.state == INTERCEPTION_MOUSE_RIGHT_BUTTON_DOWN || mstroke.state == INTERCEPTION_MOUSE_BUTTON_4_DOWN ||
+          mstroke.state == INTERCEPTION_MOUSE_BUTTON_5_DOWN);
+        // Mouse wheel
+        w->mouseWheel = MOUSE_WHEEL_NONE;
+        if(mstroke.state == INTERCEPTION_MOUSE_WHEEL) {
+          w->mouseWheel = MOUSE_WHEEL_V;
+          w->y = mstroke.rolling;
+        }
+        else if(mstroke.state == INTERCEPTION_MOUSE_HWHEEL) {
+          w->mouseWheel = MOUSE_WHEEL_H;
+          w->x = mstroke.rolling;
+        }
+        // Mouse move
+        w->mouseMove = MOUSE_MOVE_NONE;
+        if(mstroke.flags & INTERCEPTION_MOUSE_MOVE_ABSOLUTE) w->mouseMove = MOUSE_MOVE_ABS;
+        else if(mstroke.flags & INTERCEPTION_MOUSE_MOVE_RELATIVE) w->mouseMove = MOUSE_MOVE_REL;
+      }
       w->hwid = hardwareID;
       w->hasData = true;
       w->stroke = &globalStroke;
@@ -77,13 +130,18 @@ namespace demo {
     v8::HandleScope handleScope(isolate);
 
     if(w->hasData) {
-      Handle<Value> arglol[4];
+      Handle<Value> arglol[9];
       arglol[0] = Number::New(isolate, w->keyCode);
       arglol[1] = Boolean::New(isolate, w->keyDown);
       arglol[2] = Boolean::New(isolate, w->keyE0);
       arglol[3] = v8::String::NewFromUtf8(isolate, w->hwid.c_str());
+      arglol[4] = Number::New(isolate, w->deviceType);
+      arglol[5] = Number::New(isolate, w->mouseWheel);
+      arglol[6] = Number::New(isolate, w->mouseMove);
+      arglol[7] = Number::New(isolate, w->x);
+      arglol[8] = Number::New(isolate, w->y);
       Local<Function> func = Local<Function>::New(isolate, w->callback);
-      func->Call(isolate->GetCurrentContext()->Global(), 4, arglol);
+      func->Call(isolate->GetCurrentContext()->Global(), 9, arglol);
       w->hasData = false;
     }
 
@@ -111,6 +169,12 @@ namespace demo {
     globalContext = interception_create_context();
 
     interception_set_filter(globalContext, interception_is_keyboard, INTERCEPTION_FILTER_KEY_DOWN | INTERCEPTION_FILTER_KEY_UP | INTERCEPTION_FILTER_KEY_E0);
+    interception_set_filter(globalContext, interception_is_mouse, INTERCEPTION_FILTER_MOUSE_LEFT_BUTTON_DOWN | INTERCEPTION_FILTER_MOUSE_LEFT_BUTTON_UP |
+      INTERCEPTION_FILTER_MOUSE_RIGHT_BUTTON_DOWN | INTERCEPTION_FILTER_MOUSE_RIGHT_BUTTON_UP |
+      INTERCEPTION_FILTER_MOUSE_MIDDLE_BUTTON_DOWN | INTERCEPTION_FILTER_MOUSE_MIDDLE_BUTTON_UP |
+      INTERCEPTION_FILTER_MOUSE_BUTTON_4_DOWN | INTERCEPTION_FILTER_MOUSE_BUTTON_4_UP |
+      INTERCEPTION_FILTER_MOUSE_BUTTON_5_DOWN | INTERCEPTION_FILTER_MOUSE_BUTTON_5_UP |
+      INTERCEPTION_FILTER_MOUSE_WHEEL | INTERCEPTION_FILTER_MOUSE_HWHEEL);
 
     uv_async_t meow;
     work->async = &meow;
@@ -152,8 +216,8 @@ namespace demo {
     if(key == "mousebuttonright") return true;
     if(key == "mousebutton4") return true;
     if(key == "mousebutton5") return true;
-    if(key == "mousewheelup") return true;
-    if(key == "mousewheeldown") return true;
+    if(key == "mousewheel") return true;
+    if(key == "mousewheel") return true;
     return false;
   }
 
@@ -283,45 +347,47 @@ namespace demo {
 
     std::string keyName = std::string(*String::Utf8Value(args[0]->ToString()));
     bool keyDown = args[1]->BooleanValue();
+    int x = args[2]->Int32Value();
+    int y = args[3]->Int32Value();
 
     if(GetKeyIsMouse(keyName)) {
-      InterceptionMouseStroke mStroke;
-
+      InterceptionMouseStroke mstroke = *(InterceptionMouseStroke *) &globalStroke;
       if(keyDown) {
-        if(keyName == "mousebuttonleft") mStroke.state = INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN;
-        else if(keyName == "mousebuttonmiddle") mStroke.state = INTERCEPTION_MOUSE_MIDDLE_BUTTON_DOWN;
-        else if(keyName == "mousebuttonright") mStroke.state = INTERCEPTION_MOUSE_RIGHT_BUTTON_DOWN;
-        else if(keyName == "mousebutton4") mStroke.state = INTERCEPTION_MOUSE_BUTTON_4_DOWN;
-        else if(keyName == "mousebutton5") mStroke.state = INTERCEPTION_MOUSE_BUTTON_5_DOWN;
+        if(keyName == "mousebuttonleft") mstroke.state = INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN;
+        else if(keyName == "mousebuttonmiddle") mstroke.state = INTERCEPTION_MOUSE_MIDDLE_BUTTON_DOWN;
+        else if(keyName == "mousebuttonright") mstroke.state = INTERCEPTION_MOUSE_RIGHT_BUTTON_DOWN;
+        else if(keyName == "mousebutton4") mstroke.state = INTERCEPTION_MOUSE_BUTTON_4_DOWN;
+        else if(keyName == "mousebutton5") mstroke.state = INTERCEPTION_MOUSE_BUTTON_5_DOWN;
       }
       else {
-        if(keyName == "mousebuttonleft") mStroke.state = INTERCEPTION_MOUSE_LEFT_BUTTON_UP;
-        else if(keyName == "mousebuttonmiddle") mStroke.state = INTERCEPTION_MOUSE_MIDDLE_BUTTON_UP;
-        else if(keyName == "mousebuttonright") mStroke.state = INTERCEPTION_MOUSE_RIGHT_BUTTON_UP;
-        else if(keyName == "mousebutton4") mStroke.state = INTERCEPTION_MOUSE_BUTTON_4_UP;
-        else if(keyName == "mousebutton5") mStroke.state = INTERCEPTION_MOUSE_BUTTON_5_UP;
+        if(keyName == "mousebuttonleft") mstroke.state = INTERCEPTION_MOUSE_LEFT_BUTTON_UP;
+        else if(keyName == "mousebuttonmiddle") mstroke.state = INTERCEPTION_MOUSE_MIDDLE_BUTTON_UP;
+        else if(keyName == "mousebuttonright") mstroke.state = INTERCEPTION_MOUSE_RIGHT_BUTTON_UP;
+        else if(keyName == "mousebutton4") mstroke.state = INTERCEPTION_MOUSE_BUTTON_4_UP;
+        else if(keyName == "mousebutton5") mstroke.state = INTERCEPTION_MOUSE_BUTTON_5_UP;
       }
-      if(keyName == "mousewheeldown") {
-        mStroke.state = INTERCEPTION_MOUSE_WHEEL;
-        mStroke.y = 1;
+      if(keyName == "mousewheel") {
+        mstroke.state = INTERCEPTION_MOUSE_WHEEL;
+        mstroke.rolling = y;
       }
-      else if(keyName == "mousewheelup") {
-        mStroke.state = INTERCEPTION_MOUSE_WHEEL;
-        mStroke.y = -1;
+      else if(keyName == "mousewheel") {
+        mstroke.state = INTERCEPTION_MOUSE_WHEEL;
+        mstroke.rolling = y;
       }
-      interception_send(globalContext, globalDevice, (InterceptionStroke *)&globalStroke, 1);
+      interception_send(globalContext, lastMouseDevice, (InterceptionStroke *)&mstroke, 1);
     }
     else {
       short keyCode = GetKeyCode(keyName);
       bool isE0 = GetKeyIsE0(keyName);
+      InterceptionKeyStroke kstroke = *(InterceptionKeyStroke *) &globalStroke;
 
-      globalStroke.state = INTERCEPTION_KEY_UP;
-      if(keyDown) globalStroke.state = INTERCEPTION_KEY_DOWN;
-      if(isE0) globalStroke.state += INTERCEPTION_KEY_E0;
-      globalStroke.code = keyCode;
+      kstroke.state = INTERCEPTION_KEY_UP;
+      if(keyDown) kstroke.state = INTERCEPTION_KEY_DOWN;
+      if(isE0) kstroke.state += INTERCEPTION_KEY_E0;
+      kstroke.code = keyCode;
 
-      if(globalStroke.code != SCANCODE_NONE) {
-        interception_send(globalContext, globalDevice, (InterceptionStroke *)&globalStroke, 1);
+      if(kstroke.code != SCANCODE_NONE) {
+        interception_send(globalContext, lastKeyboardDevice, (InterceptionStroke *)&kstroke, 1);
       }
     }
   }
@@ -329,7 +395,7 @@ namespace demo {
   void SendInterceptionDefault(const FunctionCallbackInfo<Value>& args) {
     Isolate* isolate = args.GetIsolate();
 
-    interception_send(globalContext, globalDevice, (InterceptionStroke *)&globalStroke, 1);
+    interception_send(globalContext, globalDevice, &globalStroke, 1);
   }
 
   void CreateInterception(const FunctionCallbackInfo<Value>& args) {
