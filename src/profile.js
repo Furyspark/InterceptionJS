@@ -11,8 +11,8 @@ Profile.MOUSE_WHEEL_NONE = 0;
 Profile.MOUSE_WHEEL_V    = 1;
 Profile.MOUSE_WHEEL_H    = 2;
 
-Profile.MOUSE_MOVE_REL  = 0;
-Profile.MOUSE_MOVE_ABS  = 1;
+Profile.MOUSE_MOVE_REL  = 1;
+Profile.MOUSE_MOVE_ABS  = 2;
 
 
 Profile.prototype.initialize = function() {

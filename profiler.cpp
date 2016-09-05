@@ -372,6 +372,9 @@ namespace demo {
         mstroke.state = INTERCEPTION_MOUSE_WHEEL;
         mstroke.rolling = y;
       }
+      mstroke.x = 0;
+      mstroke.y = 0;
+      mstroke.flags = INTERCEPTION_MOUSE_MOVE_RELATIVE;
       interception_send(globalContext, lastMouseDevice, (InterceptionStroke *)&mstroke, 1);
     }
     else {
