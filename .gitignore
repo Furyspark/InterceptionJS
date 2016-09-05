@@ -1,3 +1,4 @@
 node_modules
 .atom-build.json
 build
+test.js
