@@ -22,9 +22,8 @@ enum MouseWheelFlag
 
 enum MouseMoveFlag
 {
-  MOUSE_MOVE_NONE = 0,
-  MOUSE_MOVE_ABS = 1,
-  MOUSE_MOVE_REL = 2
+  MOUSE_MOVE_REL = 0,
+  MOUSE_MOVE_ABS = 1
 };
 
 namespace demo {
@@ -113,9 +112,8 @@ namespace demo {
           w->x = mstroke.rolling;
         }
         // Mouse move
-        w->mouseMove = MOUSE_MOVE_NONE;
+        w->mouseMove = MOUSE_MOVE_REL;
         if(mstroke.flags & INTERCEPTION_MOUSE_MOVE_ABSOLUTE) w->mouseMove = MOUSE_MOVE_ABS;
-        else if(mstroke.flags & INTERCEPTION_MOUSE_MOVE_RELATIVE) w->mouseMove = MOUSE_MOVE_REL;
       }
       w->hwid = hardwareID;
       w->hasData = true;
@@ -174,7 +172,7 @@ namespace demo {
       INTERCEPTION_FILTER_MOUSE_MIDDLE_BUTTON_DOWN | INTERCEPTION_FILTER_MOUSE_MIDDLE_BUTTON_UP |
       INTERCEPTION_FILTER_MOUSE_BUTTON_4_DOWN | INTERCEPTION_FILTER_MOUSE_BUTTON_4_UP |
       INTERCEPTION_FILTER_MOUSE_BUTTON_5_DOWN | INTERCEPTION_FILTER_MOUSE_BUTTON_5_UP |
-      INTERCEPTION_FILTER_MOUSE_WHEEL | INTERCEPTION_FILTER_MOUSE_HWHEEL);
+      INTERCEPTION_FILTER_MOUSE_WHEEL | INTERCEPTION_FILTER_MOUSE_HWHEEL | INTERCEPTION_FILTER_MOUSE_MOVE);
 
     uv_async_t meow;
     work->async = &meow;
