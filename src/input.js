@@ -92,7 +92,6 @@ Input.indexToString = function(index, e0) {
 }
 
 Input.mouseIndexToString = function(index) {
-  console.log(index);
   switch(index) {
     case 1:
     case 2:

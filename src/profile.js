@@ -11,9 +11,8 @@ Profile.MOUSE_WHEEL_NONE = 0;
 Profile.MOUSE_WHEEL_V    = 1;
 Profile.MOUSE_WHEEL_H    = 2;
 
-Profile.MOUSE_MOVE_NONE = 0;
+Profile.MOUSE_MOVE_REL  = 0;
 Profile.MOUSE_MOVE_ABS  = 1;
-Profile.MOUSE_MOVE_REL  = 2;
 
 
 Profile.prototype.initialize = function() {
@@ -33,18 +32,24 @@ Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, d
       var key = Input.indexToString(keyCode, keyE0);
       if(key === "escape") close();
       if(key === "q") {
-        console.log("HONK");
         Core.send("mousewheel", true, 0, 100);
       }
     }
   }
   if(deviceType === Profile.DEVICE_TYPE_MOUSE) {
-    if(mouseWheel === Profile.MOUSE_WHEEL_V) {
-    }
-    else if(mouseWheel === Profile.MOUSE_WHEEL_H) {
+    if(keyCode > 0) {
+      if(mouseWheel === Profile.MOUSE_WHEEL_V) {
+        console.log("y" + y.toString());
+      }
+      else if(mouseWheel === Profile.MOUSE_WHEEL_H) {
+        console.log("x" + x.toString());
+      }
+      else {
+        console.log(Input.mouseIndexToString(keyCode));
+      }
     }
     else {
-      var key = Input.mouseIndexToString(keyCode);
+      console.log(x.toString() + "," + y.toString());
     }
   }
   Core.send_default();
