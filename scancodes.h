@@ -82,6 +82,7 @@ enum ScanCode
   SCANCODE_LCTRL   = 0x1d,
   SCANCODE_LSHIFT  = 0x2a,
   SCANCODE_LALT    = 0x38,
+  SCANCODE_LWIN    = 0x5b,
 
   SCANCODE_LBRACKET    = 0x1a,
   SCANCODE_RBRACKET    = 0x1b,

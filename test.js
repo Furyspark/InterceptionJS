@@ -88,6 +88,7 @@ Input.indexToString = function(index, e0) {
     case 83: if(e0) return "delete"; return ""; break;
     case 87: return "f11"; break;
     case 88: return "f12"; break;
+    case 91: return "lwin"; break;
   }
 }
 
@@ -148,6 +149,7 @@ Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, d
   if(keyDown) {
     if(deviceType === Profile.DEVICE_TYPE_KEYBOARD) {
       var key = Input.indexToString(keyCode, keyE0);
+      console.log(key);
       if(key === "escape") close();
       if(key === "q") {
         Core.send("mousewheel", true, 0, 100);
@@ -157,17 +159,17 @@ Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, d
   if(deviceType === Profile.DEVICE_TYPE_MOUSE) {
     if(keyCode > 0) {
       if(mouseWheel === Profile.MOUSE_WHEEL_V) {
-        console.log("y" + y.toString());
+        // console.log("y" + y.toString());
       }
       else if(mouseWheel === Profile.MOUSE_WHEEL_H) {
-        console.log("x" + x.toString());
+        // console.log("x" + x.toString());
       }
       else {
-        console.log(Input.mouseIndexToString(keyCode));
+        // console.log(Input.mouseIndexToString(keyCode));
       }
     }
     else {
-      console.log(x.toString() + "," + y.toString());
+      // console.log(x.toString() + "," + y.toString());
     }
   }
   Core.send_default();

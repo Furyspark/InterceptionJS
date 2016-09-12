@@ -188,7 +188,7 @@ namespace demo {
   }
 
   bool GetKeyIsE0(std::string key) {
-  	const int testNum = 12;
+  	const int testNum = 13;
     std::string test[testNum];
     test[0] = "numpadenter";
     test[1] = "numpadsub";
@@ -202,6 +202,7 @@ namespace demo {
     test[9] = "right";
     test[10] = "up";
     test[11] = "down";
+    test[12] = "lwin";
     for(int a = 0;a < testNum;a++) {
       if(key == test[a]) return true;
     }
@@ -254,6 +255,7 @@ namespace demo {
     if(key == "lctrl") return SCANCODE_LCTRL;
     if(key == "lshift") return SCANCODE_LSHIFT;
     if(key == "lalt") return SCANCODE_LALT;
+    if(key == "lwin") return SCANCODE_LWIN;
     if(key == "space") return SCANCODE_SPACE;
 
     if(key == "sc029") return SCANCODE_APOSTROPHE;
