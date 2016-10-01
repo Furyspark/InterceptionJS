@@ -27,6 +27,8 @@ Profile.prototype.core = function() {
 }
 
 Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, deviceType, mouseWheel, mouseMove, x, y) {
+  var sendDefault = true;
+
   if(keyDown) {
     if(deviceType === Profile.DEVICE_TYPE_KEYBOARD) {
       var key = Input.indexToString(keyCode, keyE0);
@@ -46,12 +48,14 @@ Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, d
         // console.log("x" + x.toString());
       }
       else {
-        // console.log(Input.mouseIndexToString(keyCode));
+        // sendDefault = false;
+        console.log(Input.mouseIndexToString(keyCode));
       }
     }
     else {
       // console.log(x.toString() + "," + y.toString());
     }
   }
-  Core.send_default();
+
+  if(sendDefault) Core.send_default();
 }
