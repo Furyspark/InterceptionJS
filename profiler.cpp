@@ -319,6 +319,7 @@ namespace demo {
     if(key == "numpadadd") return SCANCODE_KPPLUS;
     if(key == "numpadsub") return SCANCODE_KPMINUS;
     if(key == "numpadmult") return SCANCODE_KPMULT;
+    if(key == "numpadenter") return SCANCODE_KPENTER;
 
     if(key == "q") return SCANCODE_Q;
     if(key == "w") return SCANCODE_W;

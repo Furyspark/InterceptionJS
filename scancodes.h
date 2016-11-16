@@ -98,6 +98,7 @@ enum ScanCode
   SCANCODE_DOT         = 0x34,
   SCANCODE_SLASH       = 0x35,
 
+  SCANCODE_KPENTER     = 0x1c,
   SCANCODE_KPMULT      = 0x37,
   SCANCODE_KPPLUS      = 0x4e,
   SCANCODE_KPMINUS     = 0x4a,
