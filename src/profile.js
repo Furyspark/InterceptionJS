@@ -37,6 +37,10 @@ Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, d
       if(key === "q") {
         Core.send("mousewheel", true, 0, 100);
       }
+      if(key === "f") {
+        Core.send("a", keyDown);
+        sendDefault = false;
+      }
     }
   }
   if(deviceType === Profile.DEVICE_TYPE_MOUSE) {
@@ -56,6 +60,5 @@ Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, d
       // console.log(x.toString() + "," + y.toString());
     }
   }
-
   if(sendDefault) Core.send_default();
 }
