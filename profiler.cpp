@@ -191,21 +191,21 @@ namespace demo {
   	const int testNum = 16;
     std::string test[testNum];
     test[0] = "numpadenter";
-    test[1] = "numpadsub";
-    test[2] = "home";
-    test[3] = "pgup";
-    test[4] = "pgdn";
-    test[5] = "end";
-    test[6] = "insert";
-    test[7] = "delete";
-    test[8] = "left";
-    test[9] = "right";
-    test[10] = "up";
-    test[11] = "down";
-    test[12] = "lwin";
-    test[13] = "rctrl";
-    test[14] = "ralt";
-    test[15] = "rwin";
+    test[1] = "home";
+    test[2] = "pgup";
+    test[3] = "pgdn";
+    test[4] = "end";
+    test[5] = "insert";
+    test[6] = "delete";
+    test[7] = "left";
+    test[8] = "right";
+    test[9] = "up";
+    test[10] = "down";
+    test[11] = "lwin";
+    test[12] = "rctrl";
+    test[13] = "ralt";
+    test[14] = "rwin";
+    test[15] = "numpaddiv";
     for(int a = 0;a < testNum;a++) {
       if(key == test[a]) return true;
     }
@@ -319,6 +319,7 @@ namespace demo {
     if(key == "numpadadd") return SCANCODE_KPPLUS;
     if(key == "numpadsub") return SCANCODE_KPMINUS;
     if(key == "numpadmult") return SCANCODE_KPMULT;
+    if(key == "numpaddiv") return SCANCODE_KPDIV;
     if(key == "numpadenter") return SCANCODE_KPENTER;
 
     if(key == "q") return SCANCODE_Q;

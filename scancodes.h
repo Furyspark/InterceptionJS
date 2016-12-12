@@ -103,6 +103,7 @@ enum ScanCode
   SCANCODE_KPPLUS      = 0x4e,
   SCANCODE_KPMINUS     = 0x4a,
   SCANCODE_KPDEL       = 0x53,
+  SCANCODE_KPDIV       = 0x35,
   SCANCODE_KP1         = 0x4f,
   SCANCODE_KP2         = 0x50,
   SCANCODE_KP3         = 0x51,
