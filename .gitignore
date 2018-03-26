@@ -4,3 +4,4 @@ build
 test.js
 *.sublime-*
 *.log
+.vimrc

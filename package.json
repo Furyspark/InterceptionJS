@@ -3,8 +3,8 @@
   "main": "main.js",
   "private": true,
   "scripts": {
-    "test": "node-gyp rebuild --target=1.6.8 --arch=x64 --dist-url=https://atom.io/download/atom-shell && node compile.js && electron .",
-    "build-node": "node-gyp rebuild --target=6.9.1 --arch=x64"
+    "test": "node-gyp --python C:/Python27 rebuild --target=1.8.4 --arch=x64 --dist-url=https://atom.io/download/electron && node compile.js && electron .",
+    "build-node": "node-gyp rebuild --target=6.11.5 --arch=x64"
   },
   "devDependencies": {
     "concatenate-files": "^0.1.1"
