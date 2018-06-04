@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "test": "npm run-script build-node && node compile.js && electron .",
-    "build-node": "node-gyp --python C:/Python27 rebuild --target=1.8.4 --arch=x64 --dist-url=https://atom.io/download/electron"
+    "build-node": "node-gyp --python C:/Python27 rebuild --target=2.0.2 --arch=x64 --dist-url=https://atom.io/download/electron"
   },
   "devDependencies": {
     "concatenate-files": "^0.1.1"
